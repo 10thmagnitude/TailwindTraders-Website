@@ -1,0 +1,98 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "website_name" : {
+      "type": "string",
+      "defaultValue": "none"
+    },
+    "apiBaseUrl": {
+      "type": "string",
+      "defaultValue": "https://backend.tailwindtraders.com/"
+    },
+    "enablePersonalizer": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "skuCode": {
+      "type": "string",
+      "defaultValue": "D1"
+    }
+  },
+  "variables": {
+    "website_name": "[if(equals(parameters('website_name'), 'none'), concat('tailwindtraders',uniqueString(resourceGroup().id)), parameters('website_name'))]",
+    "plan_name": "[concat('ttappserviceplan',uniqueString(resourceGroup().id))]",
+    "personalizer_name": "[concat('Microsoft.CognitiveServices/accounts/', variables('website_name'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "name": "[variables('website_name')]",
+      "apiVersion": "2016-03-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[variables('website_name')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false"
+            },
+            {
+              "name": "ApiUrl",
+              "value": "[concat(parameters('apiBaseUrl'), '/webbff/v1')]"
+            },
+            {
+              "name": "ApiUrlShoppingCart",
+              "value": "[concat(parameters('apiBaseUrl'), '/cart-api')]"
+            },
+            {
+              "name": "Personalizer__ApiKey",
+              "value": "[if(parameters('enablePersonalizer'), listKeys(variables('personalizer_name'),'2016-02-01-preview').key1, '')]"
+            },
+            {
+              "name": "Personalizer__Endpoint",
+              "value": "[if(parameters('enablePersonalizer'), reference(variables('personalizer_name'),'2016-02-01-preview').endpoint, '')]"
+            }
+          ]
+        },
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('plan_name'))]",
+        "hostingEnvironment": ""
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverfarms/', variables('plan_name'))]",
+        "[concat('Microsoft.CognitiveServices/accounts/', variables('website_name'))]"
+      ]
+    },
+    {
+      "apiVersion": "2018-02-01",
+      "type": "Microsoft.Web/serverfarms",
+      "kind": "app",
+      "name": "[variables('plan_name')]",
+      "location": "[resourceGroup().location]",
+      "properties": {},
+      "dependsOn": [],
+      "sku": {
+        "name": "[parameters('skuCode')]"
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "condition": "[parameters('enablePersonalizer')]",
+      "apiVersion": "2016-02-01-preview",
+      "name": "[variables('website_name')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "S0"
+      },
+      "kind": "Personalizer",
+      "properties": {}
+    }
+  ],
+  "outputs": {
+    "web": {
+      "type": "string",
+      "value": "[variables('website_name')]"
+    }
+  }
+}

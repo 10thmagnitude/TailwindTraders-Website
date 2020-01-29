@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+env:
+  resource_group: cd-tailwind
+  website_name: cd-tailwind-dev
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,6 +19,19 @@ jobs:
     - uses: azure/login@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
+    
+    - name: deploy infrastructure
+      working-directory: Deploy
+      run: |
+        aksName=$(az aks list -g ${{env.resource_group}} --query [0].name -o tsv)
+        echo "Using aksName: $aksName"
+
+        apiUrl=$(az aks show -n $aksName -g ${{env.resource_group}} --query "addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName" -o tsv)
+        apiBaseUrl="https://$apiUrl"
+        echo "Using apiBaseUrl: $apiBaseUrl"
+
+        az group deployment create -g ${{env.resource_group}} --template-file deployment_classic.json `
+          --parameters website_name=${{env.website_name}} apiBaseUrl=$apiBaseUrl
 
     - name: Use Node.js
       uses: actions/setup-node@v1
@@ -38,14 +55,14 @@ jobs:
 
     - uses: azure/appservice-settings@v1
       with:
-        app-name: ${{ secrets.WEBAPP_APPSERVICE_NAME }}
-        app-settings-json: '${{ secrets.WEBAPP_APP_SETTINGS }}'
+        app-name: ${{env.website_name}}
+        # app-settings-json: '${{ secrets.WEBAPP_APP_SETTINGS }}'
 
 
     - name: 'Run Azure webapp deploy action using publish profile credentials'
       uses: azure/webapps-deploy@v1
       with: 
-        app-name: ${{ secrets.WEBAPP_APPSERVICE_NAME }}
+        app-name: ${{env.website_name}}
         package: ${{env.DOTNET_ROOT}}/Source/Tailwind.Traders.Web
 
     - name: Azure logout
