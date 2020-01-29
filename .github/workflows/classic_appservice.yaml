@@ -20,7 +20,7 @@ jobs:
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
     
-    - name: deploy infrastructure
+    - name: Deploy infrastructure
       working-directory: Deploy
       run: |
         aksName=$(az aks list -g ${{env.resource_group}} --query [0].name -o tsv)
