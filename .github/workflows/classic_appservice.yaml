@@ -30,7 +30,7 @@ jobs:
         apiBaseUrl="https://$apiUrl"
         echo "Using apiBaseUrl: $apiBaseUrl"
 
-        az group deployment create -g ${{env.resource_group}} --template-file deployment_classic.json `
+        az group deployment create -g ${{env.resource_group}} --template-file deployment_classic.json \
           --parameters website_name=${{env.website_name}} apiBaseUrl=$apiBaseUrl
 
     - name: Use Node.js
