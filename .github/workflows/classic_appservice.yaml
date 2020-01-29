@@ -53,10 +53,10 @@ jobs:
       run: |
         dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/Source/Tailwind.Traders.Web
 
-    - uses: azure/appservice-settings@v1
-      with:
-        app-name: ${{env.website_name}}
-        # app-settings-json: '${{ secrets.WEBAPP_APP_SETTINGS }}'
+    # - uses: azure/appservice-settings@v1
+    #   with:
+    #     app-name: ${{env.website_name}}
+    #     app-settings-json: '${{ secrets.WEBAPP_APP_SETTINGS }}'
 
 
     - name: 'Run Azure webapp deploy action using publish profile credentials'
