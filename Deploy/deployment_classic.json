@@ -16,7 +16,7 @@
     },
     "skuCode": {
       "type": "string",
-      "defaultValue": "D1"
+      "defaultValue": "B1"
     }
   },
   "variables": {
