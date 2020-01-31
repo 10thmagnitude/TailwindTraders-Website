@@ -6,9 +6,17 @@
       "type": "string",
       "defaultValue": "none"
     },
+    "slot_name" : {
+      "type": "string",
+      "defaultValue": "devspace"
+    },
     "apiBaseUrl": {
       "type": "string",
       "defaultValue": "https://backend.tailwindtraders.com/"
+    },
+    "devspace_apiBaseUrl": {
+      "type": "string",
+      "defaultValue": "https://dev.s.backend.tailwindtraders.com/"
     },
     "enablePersonalizer": {
       "type": "bool",
@@ -16,7 +24,7 @@
     },
     "skuCode": {
       "type": "string",
-      "defaultValue": "B1"
+      "defaultValue": "S1"
     }
   },
   "variables": {
@@ -32,33 +40,67 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "name": "[variables('website_name')]",
-        "siteConfig": {
-          "appSettings": [
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('plan_name'))]"
+      },
+      "resources": [
+        {
+          "name": "appSettings",
+          "type": "config",
+          "apiVersion": "2016-03-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('website_name'))]"
+          ],
+          "properties": {
+            "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+            "ApiUrl": "[concat(parameters('apiBaseUrl'), '/webbff/v1')]",
+            "ApiUrlShoppingCart": "[concat(parameters('apiBaseUrl'), '/cart-api')]",
+            "Personalizer__ApiKey": "[if(parameters('enablePersonalizer'), listKeys(variables('personalizer_name'),'2016-02-01-preview').key1, '')]",
+            "Personalizer__Endpoint": "[if(parameters('enablePersonalizer'), reference(variables('personalizer_name'),'2016-02-01-preview').endpoint, '')]"
+          }
+        },
+        {
+          "name": "slotconfignames",
+          "type": "config",
+          "apiVersion": "2016-03-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('website_name'))]"
+          ],
+          "properties": {
+            "appSettingNames": [
+              "ApiUrl",
+              "ApiUrlShoppingCart"
+            ]
+          }
+        },
+        {
+          "type": "slots",
+          "name": "[parameters('slot_name')]",
+          "apiVersion": "2016-03-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', parameters('website_name'))]"
+          ],
+          "properties": {
+          },
+          "resources": [
             {
-              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
-              "value": "false"
-            },
-            {
-              "name": "ApiUrl",
-              "value": "[concat(parameters('apiBaseUrl'), '/webbff/v1')]"
-            },
-            {
-              "name": "ApiUrlShoppingCart",
-              "value": "[concat(parameters('apiBaseUrl'), '/cart-api')]"
-            },
-            {
-              "name": "Personalizer__ApiKey",
-              "value": "[if(parameters('enablePersonalizer'), listKeys(variables('personalizer_name'),'2016-02-01-preview').key1, '')]"
-            },
-            {
-              "name": "Personalizer__Endpoint",
-              "value": "[if(parameters('enablePersonalizer'), reference(variables('personalizer_name'),'2016-02-01-preview').endpoint, '')]"
+              "apiVersion": "2016-03-01",
+              "name": "appsettings",
+              "type": "config",
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/Sites/Slots', parameters('website_name'), parameters('slot_name'))]"
+              ],
+              "properties": {
+                "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+                "ApiUrl": "[concat(parameters('devspace_apiBaseUrl'), '/webbff/v1')]",
+                "ApiUrlShoppingCart": "[concat(parameters('devspace_apiBaseUrl'), '/cart-api')]",
+                "Personalizer__ApiKey": "[if(parameters('enablePersonalizer'), listKeys(variables('personalizer_name'),'2016-02-01-preview').key1, '')]",
+                "Personalizer__Endpoint": "[if(parameters('enablePersonalizer'), reference(variables('personalizer_name'),'2016-02-01-preview').endpoint, '')]"
+              }
             }
           ]
-        },
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('plan_name'))]",
-        "hostingEnvironment": ""
-      },
+        }
+      ],
       "dependsOn": [
         "[concat('Microsoft.Web/serverfarms/', variables('plan_name'))]",
         "[concat('Microsoft.CognitiveServices/accounts/', variables('website_name'))]"

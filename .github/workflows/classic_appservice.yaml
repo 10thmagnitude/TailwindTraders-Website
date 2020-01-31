@@ -8,6 +8,7 @@ on:
 env:
   resource_group: cd-tailwind
   website_name: cd-tailwind-dev
+  dev_space: colin.s
 
 jobs:
   build-and-deploy:
@@ -53,17 +54,19 @@ jobs:
       run: |
         dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/Source/Tailwind.Traders.Web
 
-    # - uses: azure/appservice-settings@v1
-    #   with:
-    #     app-name: ${{env.website_name}}
-    #     app-settings-json: '${{ secrets.WEBAPP_APP_SETTINGS }}'
-
-
-    - name: 'Run Azure webapp deploy action using publish profile credentials'
+    - name: 'Deploy to devspace slot'
       uses: azure/webapps-deploy@v1
       with: 
         app-name: ${{env.website_name}}
         package: ${{env.DOTNET_ROOT}}/Source/Tailwind.Traders.Web
+        slot-name: devspace
+
+    - name: 'Deploy to main slot'
+      uses: azure/webapps-deploy@v1
+      with: 
+        app-name: ${{env.website_name}}
+        package: ${{env.DOTNET_ROOT}}/Source/Tailwind.Traders.Web
+
 
     - name: Azure logout
       run: |
