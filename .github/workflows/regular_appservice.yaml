@@ -1,9 +1,9 @@
 name: Web regular AppService
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
 jobs:
   build-and-deploy:
