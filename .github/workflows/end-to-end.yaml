@@ -3,8 +3,8 @@ name: End to End
 on:
   push:
     branches:
-      - main
-      - actions
+    - main
+    - actions
   workflow_dispatch:  # manual trigger
 
 jobs:
@@ -28,8 +28,8 @@ jobs:
       working-directory: Source/Tailwind.Traders.Web
       run: |
         dotnet build --configuration Release
-        dotnet publish -c Release -o publish
-    
+        dotnet publish -c Release -o publish --runtime linux-x64 --self-contained false
+
     - name: Publish artifact
       uses: actions/upload-artifact@v2
       with:
