@@ -7,6 +7,10 @@ on:
     - actions
   workflow_dispatch:  # manual trigger
 
+env:
+  tf_version: 0.14.3
+  tf_dir: Deploy/Terraform/environment
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,3 +41,78 @@ jobs:
       with:
         name: site
         path: Source/Tailwind.Traders.Web/publish
+    
+  dev_infra_plan:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      env_name: DEV
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: DEV
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ environment.env_name }}.terraform.tfstate"
+
+    - name: TF Plan
+      run: terraform plan -no-color -var-file=terraform.${{ environment.env_name }}.tfvars -out=out.plan
+    
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ environment.env_name }}-tf-plan
+        path: out.plan
+  
+  dev_infra_apply:
+    needs: dev_infra_plan
+    runs-on: ubuntu-latest
+    env:
+      env_name: DEV
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: DEV
+    outputs:
+      webapp_url: ${{ steps.get_webapp_url.outputs.url }}
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Download plan
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ environment.env_name }}-tf-plan
+    
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ environment.env_name }}.terraform.tfstate"
+
+    - name: TF Apply
+      run: terraform apply -var-file=terraform.${{ environment.env_name }}.tfvars -auto-approve out.plan
+    
+    - id: get_webapp_url
+      name: Output web app URL
+      run: |
+        export url=$(terraform output slotUrl)
+        echo "::set-output name=webapp_url::http://${url}"
+
+  dev_deploy:
+    needs: dev_infra_apply
+    runs-on: ubuntu-latest
+    environment:
+      name: DEV
+      url: ${{ needs.dev_infra_apply.outputs.webapp_url }}
+    steps:
