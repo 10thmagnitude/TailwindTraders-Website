@@ -55,6 +55,19 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "::set-env name=ARM_SUBSCRIPTION_ID::$(az account show --query="id" -o tsv)"
+          echo "::set-env name=ARM_CLIENT_ID::$(az account show --query="user.name" -o tsv)"
+          echo "::set-env name=ARM_CLIENT_SECRET::$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "::set-env name=ARM_TENANT_ID::$(az account show --query="tenantId" -o tsv)"
+
     - name: Install TF
       uses: hashicorp/setup-terraform@v1
       with:
@@ -71,7 +84,10 @@ jobs:
       with:
         name: ${{ environment.env_name }}-tf-plan
         path: out.plan
-  
+    
+    - name: Azure logout
+      run: az logout
+
   dev_infra_apply:
     needs: dev_infra_plan
     runs-on: ubuntu-latest
@@ -86,6 +102,19 @@ jobs:
       webapp_url: ${{ steps.get_webapp_url.outputs.url }}
     steps:
     - uses: actions/checkout@master
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "::set-env name=ARM_SUBSCRIPTION_ID::$(az account show --query="id" -o tsv)"
+          echo "::set-env name=ARM_CLIENT_ID::$(az account show --query="user.name" -o tsv)"
+          echo "::set-env name=ARM_CLIENT_SECRET::$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "::set-env name=ARM_TENANT_ID::$(az account show --query="tenantId" -o tsv)"
 
     - name: Download plan
       uses: actions/download-artifact@v2
@@ -108,6 +137,9 @@ jobs:
       run: |
         export url=$(terraform output slotUrl)
         echo "::set-output name=webapp_url::http://${url}"
+    
+    - name: Azure logout
+      run: az logout
 
   dev_deploy:
     needs: dev_infra_apply
@@ -116,3 +148,5 @@ jobs:
       name: DEV
       url: ${{ needs.dev_infra_apply.outputs.webapp_url }}
     steps:
+    - run: |
+        echo "${{ needs.dev_infra_apply.outputs.webapp_url }}"
