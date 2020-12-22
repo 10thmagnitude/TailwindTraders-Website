@@ -131,7 +131,7 @@ jobs:
       run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
 
     - name: TF Apply
-      run: terraform apply -var-file=terraform.${{ env.env_name }}.tfvars -auto-approve out.plan
+      run: terraform apply -no-color -input=false -auto-approve out.plan
     
     - id: get_webapp_url
       name: Output web app URL
