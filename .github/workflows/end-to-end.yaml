@@ -1,0 +1,36 @@
+name: End to End
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies in client app
+      working-directory: Source/Tailwind.Traders.Web/ClientApp
+      run: npm install
+
+    - name: Build and publish with dotnet
+      working-directory: Source/Tailwind.Traders.Web
+      run: |
+        dotnet build --configuration Release
+        dotnet publish -c Release -o publish
+    
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: site
+        path: Source/Tailwind.Traders.Web/publish
