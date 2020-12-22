@@ -63,7 +63,7 @@ jobs:
       uses: Azure/cli@v1
       with:
         inlineScript: | 
-          echo "::add-mask::ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
           echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
           echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
@@ -111,10 +111,10 @@ jobs:
       uses: Azure/cli@v1
       with:
         inlineScript: | 
-          echo "::set-env name=ARM_SUBSCRIPTION_ID::$(az account show --query="id" -o tsv)"
-          echo "::set-env name=ARM_CLIENT_ID::$(az account show --query="user.name" -o tsv)"
-          echo "::set-env name=ARM_CLIENT_SECRET::$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')"
-          echo "::set-env name=ARM_TENANT_ID::$(az account show --query="tenantId" -o tsv)"
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
 
     - name: Download plan
       uses: actions/download-artifact@v2
