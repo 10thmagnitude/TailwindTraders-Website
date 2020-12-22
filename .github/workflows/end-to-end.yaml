@@ -120,6 +120,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: ${{ env.env_name }}-tf-plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}/out.plan
     
     - name: Install TF
       uses: hashicorp/setup-terraform@v1
