@@ -7,7 +7,6 @@ terraform {
 }
 
 provider "azurerm" {
-  version                 = "=2.41.0"
   features {}
 }
 
@@ -17,8 +16,8 @@ data "azurerm_resource_group" "main" {
 
 resource "azurerm_app_service_plan" "plan" {
   name                    = "cd-ghactions-plan"
-  location                = azurerm_resource_group.main.location
-  resource_group_name     = azurerm_resource_group.main.name
+  location                = data.azurerm_resource_group.main.location
+  resource_group_name     = data.azurerm_resource_group.main.name
 
   sku {
     tier                  = "Standard"
@@ -28,8 +27,8 @@ resource "azurerm_app_service_plan" "plan" {
 
 resource "azurerm_app_service" "webapp" {
   name                    = "cdtailwindgha"
-  location                = azurerm_resource_group.main.location
-  resource_group_name     = azurerm_resource_group.main.name
+  location                = data.azurerm_resource_group.main.location
+  resource_group_name     = data.azurerm_resource_group.main.name
   app_service_plan_id     = azurerm_app_service_plan.plan.id
 
   site_config {
@@ -46,8 +45,8 @@ resource "azurerm_app_service" "webapp" {
 resource "azurerm_app_service_slot" "slot" {
   name                    = "DEV"
   app_service_name        = azurerm_app_service.webapp.name
-  location                = azurerm_resource_group.main.location
-  resource_group_name     = azurerm_resource_group.main.name
+  location                = data.azurerm_resource_group.main.location
+  resource_group_name     = data.azurerm_resource_group.main.name
   app_service_plan_id     = azurerm_app_service_plan.plan.id
 
   site_config {
