@@ -83,7 +83,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.env_name }}-tf-plan
-        path: out.plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}/out.plan
     
     - name: Azure logout
       run: az logout
