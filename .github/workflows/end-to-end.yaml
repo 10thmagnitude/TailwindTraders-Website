@@ -74,15 +74,15 @@ jobs:
         terraform_version: ${{ env.tf_version }}
 
     - name: Init TF
-      run: terraform init --backend-config="key=${{ environment.env_name }}.terraform.tfstate"
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
 
     - name: TF Plan
-      run: terraform plan -no-color -var-file=terraform.${{ environment.env_name }}.tfvars -out=out.plan
+      run: terraform plan -no-color -var-file=terraform.${{ env.env_name }}.tfvars -out=out.plan
     
     - name: Publish artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ environment.env_name }}-tf-plan
+        name: ${{ env.env_name }}-tf-plan
         path: out.plan
     
     - name: Azure logout
@@ -119,7 +119,7 @@ jobs:
     - name: Download plan
       uses: actions/download-artifact@v2
       with:
-        name: ${{ environment.env_name }}-tf-plan
+        name: ${{ env.env_name }}-tf-plan
     
     - name: Install TF
       uses: hashicorp/setup-terraform@v1
@@ -127,10 +127,10 @@ jobs:
         terraform_version: ${{ env.tf_version }}
 
     - name: Init TF
-      run: terraform init --backend-config="key=${{ environment.env_name }}.terraform.tfstate"
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
 
     - name: TF Apply
-      run: terraform apply -var-file=terraform.${{ environment.env_name }}.tfvars -auto-approve out.plan
+      run: terraform apply -var-file=terraform.${{ env.env_name }}.tfvars -auto-approve out.plan
     
     - id: get_webapp_url
       name: Output web app URL
