@@ -99,7 +99,7 @@ jobs:
     environment:
       name: DEV
     outputs:
-      webapp_url: ${{ steps.get_webapp_url.outputs.url }}
+      webapp_url: ${{ steps.get_webapp_url.outputs.webapp_url }}
     steps:
     - uses: actions/checkout@master
 
