@@ -74,10 +74,16 @@ jobs:
         terraform_version: ${{ env.tf_version }}
 
     - name: Init TF
-      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+      run: |
+        pwd
+        terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+        ls -la
 
     - name: TF Plan
-      run: terraform plan -no-color -var-file=terraform.${{ env.env_name }}.tfvars -out=out.plan
+      run: |
+        pwd 
+        terraform plan -no-color -var-file=terraform.${{ env.env_name }}.tfvars -out=out.plan
+        ls -la
     
     - name: Publish artifact
       uses: actions/upload-artifact@v2
@@ -128,7 +134,10 @@ jobs:
         terraform_version: ${{ env.tf_version }}
 
     - name: Init TF
-      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+      run: |
+        pwd
+        terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+        ls -la
 
     - name: TF Apply
       run: |
