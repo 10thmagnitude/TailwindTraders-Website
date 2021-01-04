@@ -6,7 +6,8 @@ name: Web in AKS
 # Please refer to https://github.com/Microsoft/TailwindTraders-Backend#enabling-ssltls-on-the-cluster-optional-but-highly-recommended and following.
 # Installing the WEB on AKS without TLS enabled is NOT supported.
 
-# on:
+on:
+  workflow_dispatch:
 #   push:
 #     branches:
 #       - main
