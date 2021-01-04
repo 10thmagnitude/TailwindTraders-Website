@@ -136,10 +136,10 @@ jobs:
     - id: get_webapp_url
       name: Output web app URL
       run: |
-        export url="$(terraform output -raw slotURL)"
+        url="$(terraform output -raw slotURL)"
         fqdn="http://${url}"
-        echo "::debug::$fqdn"
-        echo "::set-output name=webapp_url::$fqdn"
+        echo "::debug::${fqdn}"
+        echo "::set-output name=webapp_url::${fqdn}"
     
     - name: Azure logout
       run: az logout
