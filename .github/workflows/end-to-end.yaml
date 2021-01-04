@@ -116,11 +116,11 @@ jobs:
           echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
 
-    - name: Download plan
-      uses: actions/download-artifact@v2
-      with:
-        name: ${{ env.env_name }}-tf-plan
-        path: ${{ github.workspace }}/${{ env.tf_dir }}
+    # - name: Download plan
+    #   uses: actions/download-artifact@v2
+    #   with:
+    #     name: ${{ env.env_name }}-tf-plan
+    #     path: ${{ github.workspace }}/${{ env.tf_dir }}
     
     - name: Install TF
       uses: hashicorp/setup-terraform@v1
