@@ -159,13 +159,16 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Azure logout
+      run: ls -la github.workspace }}/site
+
     - name: Deploy web app
       id: deploy
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.web_app_name }}
         slot-name: ${{ env.slot_name }}
-        package: ${{ github.workspace }}/site/site.zip
+        package: ${{ github.workspace }}/site
     
     - name: Azure logout
       run: az logout
