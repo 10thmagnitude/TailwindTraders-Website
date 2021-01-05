@@ -136,10 +136,11 @@ jobs:
     - id: get_webapp_url
       name: Output web app URL
       run: |
-        #url="$(terraform output -raw slotURL)"
-        url=$(($RANDOM + $RANDOM))
-        fqdn="${url}"
-        echo "::debug::${fqdn}"
+        terraform --version
+        terraform output -raw slotURL
+        export url=$(terraform output -raw slotURL)
+        fqdn="http://${url}"
+        #echo "::debug::${fqdn}"
         echo "::set-output name=url::${fqdn}"
     
     - name: Azure logout
