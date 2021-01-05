@@ -99,7 +99,7 @@ jobs:
     environment:
       name: DEV
     outputs:
-      webapp_url: ${{ steps.get_webapp_url.outputs.webapp_url }}
+      webapp_url: ${{ steps.get_webapp_url.outputs.url }}
     steps:
     - uses: actions/checkout@master
 
@@ -140,7 +140,7 @@ jobs:
         $url=$(($RANDOM + $RANDOM))
         fqdn="${url}"
         echo "::debug::${fqdn}"
-        echo "::set-output name=webapp_url::${fqdn}"
+        echo "::set-output name=url::${fqdn}"
     
     - name: Azure logout
       run: az logout
