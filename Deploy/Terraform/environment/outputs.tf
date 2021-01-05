@@ -4,6 +4,6 @@ output "webappURL" {
 }
 
 output "slotURL" {
-    value       = "${azurerm_app_service_slot.slot.default_site_hostname}"
+    value       = azurerm_app_service_slot.slot.default_site_hostname
     description = "URL of the Web App slot"
 }
