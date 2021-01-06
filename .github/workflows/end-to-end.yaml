@@ -95,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       env_name: DEV
+      url: http://foo.com/blah
     defaults:
       run:
         working-directory: ${{ env.tf_dir }}
