@@ -134,6 +134,18 @@ jobs:
 
     - name: TF Apply
       run: terraform apply -no-color -input=false -auto-approve out.plan
+
+    - name: Get URL
+      run: |
+        url=$(terraform output -raw slotURL)
+        echo "$url is the unsecure url"
+      env:
+        GITHUB_ALLOW_UNSECURE_COMMANDS: true
+    
+    - name: Get URL 2
+      run: |
+        url=$(terraform output -raw slotURL)
+        echo "$url is the url"
     
     - id: get_webapp_url
       name: Output web app URL
@@ -159,8 +171,8 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    - name: Azure logout
-      run: ls -la github.workspace }}/site
+    - name: List files
+      run: ls -la ${{ github.workspace }}/site
 
     - name: Deploy web app
       id: deploy
