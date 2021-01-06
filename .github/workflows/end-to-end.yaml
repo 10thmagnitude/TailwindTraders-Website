@@ -135,18 +135,6 @@ jobs:
     - name: TF Apply
       run: terraform apply -no-color -input=false -auto-approve out.plan
 
-    - name: Get URL
-      run: |
-        url=$(terraform output -raw slotURL)
-        echo "$url is the unsecure url"
-      env:
-        GITHUB_ALLOW_UNSECURE_COMMANDS: true
-    
-    - name: Get URL 2
-      run: |
-        url=$(terraform output -raw slotURL)
-        echo "$url is the url"
-    
     - id: get_webapp_url
       name: Output web app URL
       run: terraform output -raw slotURL
@@ -159,8 +147,11 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: DEV
-      url: ${{ steps.deploy.outputs.webapp-url }}
+      url: ${{ steps.deploywebapp.outputs.webapp-url }}
     steps:
+    - name: Echo url from previous stage
+      run: echo "Got [${{ needs.dev_infra_apply.outputs.webapp_url }}] from previous job"
+
     - name: Download site package
       uses: actions/download-artifact@v2
       with:
@@ -175,12 +166,15 @@ jobs:
       run: ls -la ${{ github.workspace }}/site
 
     - name: Deploy web app
-      id: deploy
+      id: deploywebapp
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.web_app_name }}
         slot-name: ${{ env.slot_name }}
         package: ${{ github.workspace }}/site
     
+    - name: Echo url from deployment
+      run: echo "Got [${{ steps.deploywebapp.outputs.webapp-url }}] from previous step"
+
     - name: Azure logout
       run: az logout
