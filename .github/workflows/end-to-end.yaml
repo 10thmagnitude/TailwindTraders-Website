@@ -279,10 +279,10 @@ jobs:
       run: az logout
 
   prod_deploy:
-    needs: dev_infra_apply
+    needs: prod_infra_apply
     runs-on: ubuntu-latest
     environment:
-      name: DEV
+      name: PROD
       url: ${{ steps.deploywebapp.outputs.webapp-url }}
     steps:
     - name: Echo url from previous stage
