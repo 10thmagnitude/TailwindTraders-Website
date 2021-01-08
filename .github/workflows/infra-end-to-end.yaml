@@ -19,7 +19,6 @@ env:
 
 jobs:
   dev_infra_plan:
-    needs: build
     runs-on: ubuntu-latest
     env:
       env_name: DEV
