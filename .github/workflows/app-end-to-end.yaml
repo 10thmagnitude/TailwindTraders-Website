@@ -46,7 +46,7 @@ jobs:
         path: Source/Tailwind.Traders.Web/publish
     
   dev_deploy:
-    needs: dev_infra_apply
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: DEV
