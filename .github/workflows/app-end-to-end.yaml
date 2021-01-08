@@ -6,7 +6,7 @@ on:
     - main
     - actions
     paths-ignore:
-    - Deploy
+    - "Deploy/**"
   workflow_dispatch:  # manual trigger
 
 env:
