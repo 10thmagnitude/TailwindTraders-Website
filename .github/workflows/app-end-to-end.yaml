@@ -93,7 +93,7 @@ jobs:
     - name: Swap slots
       id: slot_swap
       run: |
-        az webapp slot swap -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} -s ${{ env.slot_name }}
+        az webapp deployment slot swap -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} -s ${{ env.slot_name }}
         url=$(az webapp show -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} --query "defaultHostName" -o tsv)
         echo "::set-output name=url::$url"
 
