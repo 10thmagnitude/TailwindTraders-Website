@@ -97,5 +97,8 @@ jobs:
         url=$(az webapp show -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} --query "defaultHostName" -o tsv)
         echo "::set-output name=url::$url"
 
+    - name: Echo url from swap
+      run: echo "Got [${{ steps.slot_swap.outputs.url }}] from previous step"
+
     - name: Azure logout
       run: az logout
