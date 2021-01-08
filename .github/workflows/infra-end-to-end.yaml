@@ -7,7 +7,7 @@ on:
     - actions
     paths:
     - "Deploy/**"
-    - ".github/workflows/infra-end-to-end.yml"
+    - ".github/workflows/infra-end-to-end.yaml"
   workflow_dispatch:  # manual trigger
 
 env:
