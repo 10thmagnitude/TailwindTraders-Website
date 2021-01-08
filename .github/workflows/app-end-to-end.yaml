@@ -1,6 +1,7 @@
 name: App Deploy End to End
 
 on:
+  workflow_dispatch:  # manual trigger
   push:
     branches:
     - main
@@ -8,7 +9,6 @@ on:
     paths-ignore:
     - "Deploy/**"
     - ".github/workflows/infra-end-to-end.yaml"
-  workflow_dispatch:  # manual trigger
 
 env:
   web_app_name: cdtailwindgha

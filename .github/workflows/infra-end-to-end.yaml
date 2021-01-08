@@ -1,6 +1,7 @@
 name: Infra Deploy End to End
 
 on:
+  workflow_dispatch:  # manual trigger
   push:
     branches:
     - main
@@ -8,7 +9,6 @@ on:
     paths:
     - "Deploy/**"
     - ".github/workflows/infra-end-to-end.yaml"
-  workflow_dispatch:  # manual trigger
 
 env:
   tf_version: 0.14.3
