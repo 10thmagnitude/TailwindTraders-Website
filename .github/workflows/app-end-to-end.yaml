@@ -7,12 +7,13 @@ on:
     - actions
     paths-ignore:
     - "Deploy/**"
+    - ".github/workflows/infra-end-to-end.yaml"
   workflow_dispatch:  # manual trigger
 
 env:
   web_app_name: cdtailwindgha
   web_app_rg_name: cd-ghactions-demo
-  slot_name: DEV
+  slot_name: staging
 
 jobs:
   build:
@@ -67,6 +68,36 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.web_app_name }}
+        package: ${{ github.workspace }}/site
+    
+    - name: Echo url from deployment
+      run: echo "Got [${{ steps.deploywebapp.outputs.webapp-url }}] from previous step"
+
+    - name: Azure logout
+      run: az logout
+
+  prod_deploy_canary:
+    needs: dev_deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: PROD
+      url: ${{ steps.slot_swap.outputs.url }}
+    steps:
+    - name: Download site package
+      uses: actions/download-artifact@v2
+      with:
+        name: site
+        path: ${{ github.workspace }}/site
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy web app
+      id: deploywebapp
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.web_app_name }}
         slot-name: ${{ env.slot_name }}
         package: ${{ github.workspace }}/site
     
@@ -77,7 +108,7 @@ jobs:
       run: az logout
 
   prod_deploy:
-    needs: dev_deploy
+    needs: prod_deploy_canary
     runs-on: ubuntu-latest
     environment:
       name: PROD

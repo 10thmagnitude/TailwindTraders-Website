@@ -15,15 +15,15 @@ data "azurerm_resource_group" "main" {
 }
 
 resource "azurerm_app_service_plan" "plan" {
-  name                    = "cd-ghactions-plan"
+  name                    = "cd-ghactions-plan-${var.environment}"
   location                = data.azurerm_resource_group.main.location
   resource_group_name     = data.azurerm_resource_group.main.name
   kind                    = "Linux"
   reserved                = true
 
   sku {
-    tier                  = "Standard"
-    size                  = "S1"
+    tier                  = var.webapp_tier
+    size                  = var.webapp_size
   }
 }
 
@@ -45,7 +45,8 @@ resource "azurerm_app_service" "webapp" {
 }
 
 resource "azurerm_app_service_slot" "slot" {
-  name                    = "DEV"
+  count                   = var.webapp_tier == "Free" ? 0 : 1
+  name                    = var.slotname
   app_service_name        = azurerm_app_service.webapp.name
   location                = data.azurerm_resource_group.main.location
   resource_group_name     = data.azurerm_resource_group.main.name
