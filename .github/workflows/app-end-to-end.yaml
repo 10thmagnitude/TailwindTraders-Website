@@ -1,0 +1,101 @@
+name: End to End
+
+on:
+  push:
+    branches:
+    - main
+    - actions
+    paths-ignore:
+    - Deploy
+  workflow_dispatch:  # manual trigger
+
+env:
+  web_app_name: cdtailwindgha
+  web_app_rg_name: cd-ghactions-demo
+  slot_name: DEV
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.npm
+          node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies in client app
+      working-directory: Source/Tailwind.Traders.Web/ClientApp
+      run: npm install
+
+    - name: Build and publish with dotnet
+      working-directory: Source/Tailwind.Traders.Web
+      run: |
+        dotnet build --configuration Release
+        dotnet publish -c Release -o publish --runtime linux-x64 --self-contained false
+
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: site
+        path: Source/Tailwind.Traders.Web/publish
+    
+  dev_deploy:
+    needs: dev_infra_apply
+    runs-on: ubuntu-latest
+    environment:
+      name: DEV
+      url: ${{ steps.deploywebapp.outputs.webapp-url }}
+    steps:
+    - name: Download site package
+      uses: actions/download-artifact@v2
+      with:
+        name: site
+        path: ${{ github.workspace }}/site
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy web app
+      id: deploywebapp
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.web_app_name }}
+        slot-name: ${{ env.slot_name }}
+        package: ${{ github.workspace }}/site
+    
+    - name: Echo url from deployment
+      run: echo "Got [${{ steps.deploywebapp.outputs.webapp-url }}] from previous step"
+
+    - name: Azure logout
+      run: az logout
+
+  prod_deploy:
+    needs: dev_deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: PROD
+      url: ${{ steps.slot_swap.outputs.url }}
+    steps:
+    - name: Echo url from previous stage
+      run: echo "Got [${{ needs.dev_infra_apply.outputs.webapp_url }}] from previous job"
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Swap slots
+      id: slot_swap
+      run: |
+        az webapp slot swap -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} -s ${{ env.slot_name }}
+        url=$(az webapp show -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} --query "defaultHostName" -o tsv)
+        echo "::set-output name=url::$url"
+
+    - name: Azure logout
+      run: az logout

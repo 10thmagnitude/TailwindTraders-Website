@@ -1,10 +1,12 @@
-name: End to End
+name: Infra End to End
 
 on:
   push:
     branches:
     - main
     - actions
+    paths:
+    - Deploy
   workflow_dispatch:  # manual trigger
 
 env:
@@ -15,36 +17,6 @@ env:
   slot_name: DEV
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.npm
-          node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Install dependencies in client app
-      working-directory: Source/Tailwind.Traders.Web/ClientApp
-      run: npm install
-
-    - name: Build and publish with dotnet
-      working-directory: Source/Tailwind.Traders.Web
-      run: |
-        dotnet build --configuration Release
-        dotnet publish -c Release -o publish --runtime linux-x64 --self-contained false
-
-    - name: Publish artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: site
-        path: Source/Tailwind.Traders.Web/publish
-    
   dev_infra_plan:
     needs: build
     runs-on: ubuntu-latest
@@ -101,8 +73,6 @@ jobs:
         working-directory: ${{ env.tf_dir }}
     environment:
       name: DEV
-    outputs:
-      webapp_url: ${{ steps.get_webapp_url.outputs.stdout }}
     steps:
     - uses: actions/checkout@master
 
@@ -143,43 +113,6 @@ jobs:
     - name: Azure logout
       run: az logout
 
-  dev_deploy:
-    needs: dev_infra_apply
-    runs-on: ubuntu-latest
-    environment:
-      name: DEV
-      url: ${{ needs.dev_infra_apply.outputs.webapp_url }}
-    steps:
-    - name: Echo url from previous stage
-      run: echo "Got [${{ needs.dev_infra_apply.outputs.webapp_url }}] from previous job"
-
-    - name: Download site package
-      uses: actions/download-artifact@v2
-      with:
-        name: site
-        path: ${{ github.workspace }}/site
-    
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    - name: List files
-      run: ls -la ${{ github.workspace }}/site
-
-    - name: Deploy web app
-      id: deploywebapp
-      uses: azure/webapps-deploy@v2
-      with: 
-        app-name: ${{ env.web_app_name }}
-        slot-name: ${{ env.slot_name }}
-        package: ${{ github.workspace }}/site
-    
-    - name: Echo url from deployment
-      run: echo "Got [${{ steps.deploywebapp.outputs.webapp-url }}] from previous step"
-
-    - name: Azure logout
-      run: az logout
-
   prod_infra_plan:
     needs: dev_deploy
     runs-on: ubuntu-latest
@@ -189,7 +122,7 @@ jobs:
       run:
         working-directory: ${{ env.tf_dir }}
     environment:
-      name: PROD
+      name: PROD-PLAN
     steps:
     - uses: actions/checkout@master
 
@@ -236,8 +169,6 @@ jobs:
         working-directory: ${{ env.tf_dir }}
     environment:
       name: PROD
-    outputs:
-      webapp_url: ${{ steps.get_webapp_url.outputs.stdout }}
     steps:
     - uses: actions/checkout@master
 
@@ -270,30 +201,6 @@ jobs:
 
     - name: TF Apply
       run: terraform apply -no-color -input=false -auto-approve out.plan
-
-    - id: get_webapp_url
-      name: Output web app URL
-      run: terraform output -raw webappURL
-    
-    - name: Azure logout
-      run: az logout
-
-  prod_deploy:
-    needs: prod_infra_apply
-    runs-on: ubuntu-latest
-    environment:
-      name: PROD
-      url: ${{ steps.deploywebapp.outputs.webapp-url }}
-    steps:
-    - name: Echo url from previous stage
-      run: echo "Got [${{ needs.dev_infra_apply.outputs.webapp_url }}] from previous job"
-
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    - name: Swap slots
-      run: az webapp slot swap -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} -s ${{ env.slot_name }}
 
     - name: Azure logout
       run: az logout
