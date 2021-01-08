@@ -1,4 +1,4 @@
-name: Infra End to End
+name: Infra Deploy End to End
 
 on:
   push:

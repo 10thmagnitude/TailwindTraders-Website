@@ -1,4 +1,4 @@
-name: End to End
+name: App Deploy End to End
 
 on:
   push:
