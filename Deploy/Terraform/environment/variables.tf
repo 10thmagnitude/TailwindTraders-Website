@@ -7,9 +7,13 @@ variable "apiBaseUrl" {
   default     = "https://backend.tailwindtraders.com/"
 }
 
+variable "location" {
+  description = "Location of resource"
+  default     = "uscentral"
+}
+
 variable "webapp_name" {
   description = "Name of web app"
-  default     = "cdtailwindgha" 
 }
 
 variable "webapp_tier" {

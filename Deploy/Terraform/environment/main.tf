@@ -10,14 +10,15 @@ provider "azurerm" {
   features {}
 }
 
-data "azurerm_resource_group" "main" {
-  name                    = "cd-ghactions-demo"
+resource "azurerm_resource_group" "main" {
+  name                    = "cd-ghactions-demo-${var.environment}"
+  location                = var.location    
 }
 
 resource "azurerm_app_service_plan" "plan" {
   name                    = "cd-ghactions-plan-${var.environment}"
-  location                = data.azurerm_resource_group.main.location
-  resource_group_name     = data.azurerm_resource_group.main.name
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
   kind                    = "Linux"
   reserved                = true
 
@@ -28,9 +29,9 @@ resource "azurerm_app_service_plan" "plan" {
 }
 
 resource "azurerm_app_service" "webapp" {
-  name                    = "cdtailwindgha"
-  location                = data.azurerm_resource_group.main.location
-  resource_group_name     = data.azurerm_resource_group.main.name
+  name                    = var.webapp_name
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
   app_service_plan_id     = azurerm_app_service_plan.plan.id
 
   site_config {
@@ -48,8 +49,8 @@ resource "azurerm_app_service_slot" "slot" {
   count                   = var.webapp_tier == "Free" ? 0 : 1
   name                    = var.slotname
   app_service_name        = azurerm_app_service.webapp.name
-  location                = data.azurerm_resource_group.main.location
-  resource_group_name     = data.azurerm_resource_group.main.name
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
   app_service_plan_id     = azurerm_app_service_plan.plan.id
 
   site_config {
