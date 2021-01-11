@@ -11,8 +11,9 @@ on:
     - ".github/workflows/infra-end-to-end.yaml"
 
 env:
-  web_app_name: cdtailwindgha
-  web_app_rg_name: cd-ghactions-demo
+  dev_web_app_name: dev-cdtailwindgha
+  prod_web_app_name: cdtailwindgha
+  prod_web_app_rg_name: cd-ghactions-demo-PROD
   slot_name: staging
 
 jobs:
@@ -67,7 +68,7 @@ jobs:
       id: deploywebapp
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: ${{ env.web_app_name }}
+        app-name: ${{ env.dev_web_app_name }}
         package: ${{ github.workspace }}/site
     
     - name: Echo url from deployment
@@ -97,7 +98,7 @@ jobs:
       id: deploywebapp
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: ${{ env.web_app_name }}
+        app-name: ${{ env.prod_web_app_name }}
         slot-name: ${{ env.slot_name }}
         package: ${{ github.workspace }}/site
     
@@ -124,8 +125,8 @@ jobs:
     - name: Swap slots
       id: slot_swap
       run: |
-        az webapp deployment slot swap -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} -s ${{ env.slot_name }}
-        url=$(az webapp show -g ${{ env.web_app_rg_name }} -n ${{ env.web_app_name }} --query "defaultHostName" -o tsv)
+        az webapp deployment slot swap -g ${{ env.prod_web_app_rg_name }} -n ${{ env.prod_web_app_name }} -s ${{ env.slot_name }}
+        url=$(az webapp show -g ${{ env.prod_web_app_rg_name }} -n ${{ env.prod_web_app_name }} --query "defaultHostName" -o tsv)
         echo "::set-output name=url::$url"
 
     - name: Echo url from swap

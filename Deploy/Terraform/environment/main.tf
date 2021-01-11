@@ -1,7 +1,7 @@
 terraform {
   backend "azurerm" {
-    resource_group_name   = "cd-ghactions-demo"
-    storage_account_name  = "ghactionstore"
+    resource_group_name   = "cd-ghactions-demo-shared"
+    storage_account_name  = "ghactiondemostore"
     container_name        = "tfstate"
   }
 }

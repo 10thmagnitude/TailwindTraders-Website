@@ -9,7 +9,7 @@ variable "apiBaseUrl" {
 
 variable "location" {
   description = "Location of resource"
-  default     = "uscentral"
+  default     = "southcentralus"
 }
 
 variable "webapp_name" {
