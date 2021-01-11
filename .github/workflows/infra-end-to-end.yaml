@@ -1,0 +1,205 @@
+name: Infra Deploy End to End
+
+on:
+  workflow_dispatch:  # manual trigger
+  push:
+    branches:
+    - main
+    - actions
+    paths:
+    - "Deploy/**"
+    - ".github/workflows/infra-end-to-end.yaml"
+
+env:
+  tf_version: 0.14.3
+  tf_dir: Deploy/Terraform/environment
+  web_app_name: cdtailwindgha
+  web_app_rg_name: cd-ghactions-demo
+
+jobs:
+  dev_infra_plan:
+    runs-on: ubuntu-latest
+    env:
+      env_name: DEV
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: DEV
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
+
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+
+    - name: TF Plan
+      run: terraform plan -no-color -var-file=terraform.${{ env.env_name }}.tfvars -out=out.plan
+    
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.env_name }}-tf-plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}/out.plan
+    
+    - name: Azure logout
+      run: az logout
+
+  dev_infra_apply:
+    needs: dev_infra_plan
+    runs-on: ubuntu-latest
+    env:
+      env_name: DEV
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: DEV
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
+
+    - name: Download plan
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ env.env_name }}-tf-plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}
+    
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+
+    - name: TF Apply
+      run: terraform apply -no-color -input=false -auto-approve out.plan
+
+    - id: get_webapp_url
+      name: Output web app URL
+      run: terraform output -raw slotURL
+    
+    - name: Azure logout
+      run: az logout
+
+  prod_infra_plan:
+    needs: dev_infra_apply
+    runs-on: ubuntu-latest
+    env:
+      env_name: PROD
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: PROD-PLAN
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
+
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+
+    - name: TF Plan
+      run: terraform plan -no-color -var-file=terraform.${{ env.env_name }}.tfvars -out=out.plan
+    
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.env_name }}-tf-plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}/out.plan
+    
+    - name: Azure logout
+      run: az logout
+
+  prod_infra_apply:
+    needs: prod_infra_plan
+    runs-on: ubuntu-latest
+    env:
+      env_name: PROD
+    defaults:
+      run:
+        working-directory: ${{ env.tf_dir }}
+    environment:
+      name: PROD
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Authentication for TF
+      uses: Azure/cli@v1
+      with:
+        inlineScript: | 
+          echo "ARM_SUBSCRIPTION_ID=$(az account show --query="id" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=$(az account show --query="user.name" -o tsv)" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(jq '.clientSecret' -r <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(az account show --query="tenantId" -o tsv)" >> $GITHUB_ENV
+
+    - name: Download plan
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ env.env_name }}-tf-plan
+        path: ${{ github.workspace }}/${{ env.tf_dir }}
+    
+    - name: Install TF
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.tf_version }}
+
+    - name: Init TF
+      run: terraform init --backend-config="key=${{ env.env_name }}.terraform.tfstate"
+
+    - name: TF Apply
+      run: terraform apply -no-color -input=false -auto-approve out.plan
+
+    - name: Azure logout
+      run: az logout

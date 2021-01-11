@@ -63,7 +63,7 @@ function create_resources {
     --public-access off \
     --auth-mode login \
     --account-name $opt_storage_account_name \
-    -n tfstate \
+    -n "tfstate" \
     -o table
   echo
 }
@@ -82,9 +82,9 @@ function print_terraform_backend {
 }
 
 opt_resource_group_location="southcentralus"
-opt_resource_group_name="cd-ghactions-demo"
-opt_storage_account_name="ghactionstore"
-opt_tags="createdby=colin"
+opt_resource_group_name="cd-ghactions-demo-shared"
+opt_storage_account_name="ghactiondemostore"
+opt_tags="created_by=colin"
 opt_noninteractive="false"
 
 while getopts "l:g:a:t:n" opt; do

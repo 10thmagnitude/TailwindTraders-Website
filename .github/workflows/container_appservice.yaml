@@ -1,6 +1,7 @@
 name: Deploy in a containerized App Service
 
-# on:
+on:
+  workflow_dispatch:
 #   push:
 #     branches:
 #       - main

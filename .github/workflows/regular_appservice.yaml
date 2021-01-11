@@ -1,6 +1,7 @@
 name: Web regular AppService
 
-# on:
+on:
+  workflow_dispatch:
 #   push:
 #     branches:
 #       - main
