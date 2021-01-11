@@ -113,7 +113,7 @@ jobs:
       run: az logout
 
   prod_infra_plan:
-    #needs: dev_infra_apply
+    needs: dev_infra_apply
     runs-on: ubuntu-latest
     env:
       env_name: PROD
