@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: PROD
-      url: ${{ steps.slot_swap.outputs.url }}
+      url: ${{ steps.deploywebapp.outputs.webapp-url }}
     steps:
     - name: Download site package
       uses: actions/download-artifact@v2
