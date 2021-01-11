@@ -4,7 +4,7 @@ variable "environment" {
 
 variable "apiBaseUrl" {
   description = "Base URL of backend"
-  default     = "https://backend.tailwindtraders.com/"
+  default     = "https://backend.tailwindtraders.com"
 }
 
 variable "location" {
